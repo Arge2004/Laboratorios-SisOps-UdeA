@@ -57,7 +57,7 @@ historical_top_processes() {
 }
 
 network_advanced() {
-  local interface, status, est_conn, rx_stats, rx_errs, rx_drop, tx_errs, tx_drop
+  local interface status est_conn rx_stats rx_errs rx_drop tx_errs tx_drop
   #Identificar interfaz principal y estado
   interface=$(ip route | grep default | awk '{print $5}' | head -n1)
   status=$(ip link show "$interface" | grep -oP 'state \K\w+')

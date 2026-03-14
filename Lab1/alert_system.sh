@@ -41,7 +41,7 @@ send_alert() {
 }
 
 check_alerts() {
-  local ram_usage cpu_load disk_usage, interface, net_status
+  local ram_usage cpu_load disk_usage interface net_status
   #RAM usage > 90%
   ram_usage=$(free | grep Mem | awk '{print $3/$2 * 100.0}')
   if (($(echo "$ram_usage > 90" | bc -l))); then
