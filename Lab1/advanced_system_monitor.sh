@@ -1,18 +1,19 @@
 #!/bin/bash
 
 if [ -d ~/system_monitor_logs/ ]; then
-  echo "Log directory already exists."
+  echo "Ya existe un directorio de logs, no se creará uno nuevo."
 else
   mkdir -p ~/system_monitor_logs/
-  echo "Log directory created."
 fi
 
 LOG_DIR="$HOME/system_monitor_logs"
 LOG_FILE="$LOG_DIR/system_stats.csv"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ALERT_SCRIPT="$SCRIPT_DIR/alert_system.sh"
 
 recolect_data() {
   TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-  CPU_USAGE=$(mpstat | grep 'all' | awk '{print 100-$13}')
+  CPU_USAGE=$(mpstat | grep 'all' | awk '{print 100-$NF}')
 
   MEM_USAGE=$(free -h | grep 'Mem' | awk '{print $3}')
   MEM_USAGE_PORC=$(free -m | grep 'Mem' | awk '{print $3/$2 * 100}')
@@ -26,6 +27,16 @@ recolect_data() {
   [ ! -f "$LOG_FILE" ] && echo "Timestamp,CPU,Mem,Mem%,RX,TX" > "$LOG_FILE"
 
   echo "$TIMESTAMP, $CPU_USAGE, $MEM_USAGE, $MEM_USAGE_PORC, $RX, $TX" >> "$LOG_FILE"
+}
+
+print_data() {
+  echo "===== Muestra de monitoreo ====="
+  echo "Timestamp: $TIMESTAMP"
+  echo "CPU (%): $CPU_USAGE"
+  echo "Memoria usada: $MEM_USAGE"
+  echo "Memoria (%): $MEM_USAGE_PORC"
+  echo "RX: $RX"
+  echo "TX: $TX"
 }
 
 analyze_memory() {
@@ -90,9 +101,12 @@ if [[ "$1" == "--daemon" ]]; then
   echo "Iniciando modo monitorización continua (cada 5 min)..."
   while true; do
     recolect_data
+    # En daemon también ejecutamos chequeo de alertas en cada ciclo.
+    [ -x "$ALERT_SCRIPT" ] && bash "$ALERT_SCRIPT" > /dev/null 2>&1
     sleep 300 # Pausa de 5 minutos
   done
 else
   recolect_data
-  echo "Datos recolectados una única vez."
+  print_data
+  echo "Datos recolectados una única vez en $LOG_FILE"
 fi

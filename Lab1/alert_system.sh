@@ -31,7 +31,7 @@ send_alert() {
   local level=$1 # CRITICAL o WARNING
   local message=$2
   local color=$3
-  local timestamp, alert_id, last_time, now
+  local timestamp alert_id last_time now
   timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
   #Prevenir inundación de alertas (mínimo 5 min entre alertas iguales)

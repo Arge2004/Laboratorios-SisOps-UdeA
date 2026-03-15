@@ -26,9 +26,15 @@ init_config() {
 
 edit_config() {
   echo -e "${YELLOW}--- Configuración de Umbrales ---${NC}"
-  read -p "Nuevo umbral RAM (%): " ram
-  read -p "Nuevo umbral CPU (Load): " cpu
-  read -p "Nuevo umbral Disco (%): " disk
+  echo "Valores actuales:"
+  source "$CONFIG_FILE"
+  echo "RAM_THRESHOLD: $RAM_THRESHOLD%"
+  echo "CPU_THRESHOLD: $CPU_THRESHOLD (Load)"
+  echo "DISK_THRESHOLD: $DISK_THRESHOLD%"
+  echo ""
+  read -p "Ingrese nuevo umbral RAM (%): " ram
+  read -p "Ingrese nuevo umbral CPU (Load): " cpu
+  read -p "Ingrese nuevo umbral Disco (%): " disk
   echo -e "RAM_THRESHOLD=$ram\nCPU_THRESHOLD=$cpu\nDISK_THRESHOLD=$disk" > "$CONFIG_FILE"
   echo -e "${GREEN}Configuración actualizada.${NC}"
 }
@@ -46,7 +52,7 @@ manage_daemon() {
   esac
 }
 
-# --- Manejo de Argumentos (Punto 2) ---
+# --- Manejo de Argumentos ---
 if [[ $# -gt 0 ]]; then
   case "$1" in
     --daemon)
@@ -72,7 +78,7 @@ if [[ $# -gt 0 ]]; then
   esac
 fi
 
-# --- Menú Interactivo (Punto 1) ---
+# --- Menú Interactivo ---
 init_config
 while true; do
   clear
@@ -84,6 +90,7 @@ while true; do
   echo "5. Ver historial de alertas"
   echo "6. Salir"
   read -p "Seleccione: " opt
+  echo ""
 
   case $opt in
     1)
@@ -107,8 +114,13 @@ while true; do
       sleep 2
       ;;
     5)
-      [ -f "$LOG_DIR/alerts.log" ] && tail -n 20 "$LOG_DIR/alerts.log" || echo "Sin alertas."
+      if [ -s "$LOG_DIR/alerts.log" ]; then
+        tail -n 20 "$LOG_DIR/alerts.log"
+      else
+        echo "Sin alertas registradas todavía."
+      fi
       read -p "Enter..."
+      echo ""
       ;;
     6) exit 0 ;;
   esac
