@@ -1,6 +1,6 @@
 # Lab 1 - Guia de ejecucion
 
-Este laboratorio monta un mini sistema de monitoreo en Bash para Linux. La idea es simple: recolectar metricas del sistema, lanzar alertas cuando algo se sale de rango y generar reportes faciles de leer.
+Este laboratorio monta un mini sistema de monitoreo en Bash para Linux. Se recolectan metricas del sistema, se lanzan alertas cuando algo se sale de rango y se generan reportes faciles de leer.
 
 Incluye:
 
