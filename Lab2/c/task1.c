@@ -11,4 +11,17 @@ int len = strlen(input);
         firstLetter++;
         lastLetter--;
     }
+
+    for (int i = 0; i < len - 1; i++) {
+        if ((unsigned char)input[i] >= 0x80 && (unsigned char)input[i] <= 0xBF) {
+            unsigned char prev = (unsigned char)input[i+1];
+            if (prev >= 0xC2 && prev <= 0xDF) {
+                // Intercambiamos solo estos dos para restaurar el orden
+                char temp = input[i];
+                input[i] = input[i+1];
+                input[i+1] = temp;
+                i++; // Saltamos al siguiente par
+            }
+        }
+    }
 }

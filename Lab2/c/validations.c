@@ -5,7 +5,7 @@ int clean_validate(char *input) {
     int j = 0; // Escritor
 
     while (input[i] != '\0') {
-        if (isalpha((unsigned char)input[i]) || isspace((unsigned char)input[i])) {
+        if (isalpha((unsigned char)input[i]) || isspace((unsigned char)input[i]) || (unsigned char)input[i] > 127) {
             input[j] = input[i];
             j++;
         }
