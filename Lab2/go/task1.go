@@ -1,9 +1,20 @@
 package main
 
-func reverseString(input *string) {
-	runes := []rune(*input)
-	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-		runes[i], runes[j] = runes[j], runes[i]
-	}
-	*input = string(runes)
+func reverseString(data []byte) {
+    i := 0
+    j := len(data) - 1
+    for i < j {
+        data[i], data[j] = data[j], data[i]
+        i++
+        j--
+    }
+
+	for k := 0; k < len(data)-1; k++ {
+        if data[k] >= 0x80 && data[k] <= 0xBF {
+            if k+1 < len(data) && data[k+1] >= 0xC2 && data[k+1] <= 0xDF {
+                data[k], data[k+1] = data[k+1], data[k]
+                k++ 
+            }
+        }
+    }
 }

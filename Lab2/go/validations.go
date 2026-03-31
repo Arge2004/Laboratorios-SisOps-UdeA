@@ -1,15 +1,13 @@
 package main
 
-import "unicode"
-
-func cleanValidate(input *string) bool {
-	runes := []rune(*input)
-	result := make([]rune, 0, len(runes))
-	for _, c := range runes {
-		if unicode.IsLetter(c) || unicode.IsSpace(c) {
-			result = append(result, c)
-		}
-	}
-	*input = string(result)
-	return len(result) > 0
+func cleanValidate(data []byte) int {
+    j := 0
+    for i := 0; i < len(data); i++ {
+        c := data[i]
+        if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == ' ' || c > 127 {
+            data[j] = data[i]
+            j++
+        }
+    }
+    return j
 }
