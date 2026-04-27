@@ -1,13 +1,12 @@
 # Laboratorio 3: Multiplicacion de matrices (C y Go)
 
-Este README explica como ejecutar ambas implementaciones (C y Go), y documenta el analisis de rendimiento solicitado.
 
 ## Integrantes
 
 - Argenis Medina Morales - argenis.medina@udea.edu.co
 - Juan Diego Duque Jimenez - juan.duque31@udea.edu.co
 
-## Como ejecutar la version en C
+## Cómo ejecutar la versión en C
 
 ```bash
 cd c
@@ -15,7 +14,7 @@ gcc -std=c11 -O2 -Wall -Wextra -pedantic -o parallel_matrix_multiply parallel_ma
 ./parallel_matrix_multiply matrix_a.txt matrix_b.txt result.txt 5
 ```
 
-## Como ejecutar la version en Go
+## Cómo ejecutar la versión en Go
 
 ```bash
 cd go
@@ -31,7 +30,7 @@ Aunque el laboratorio tiene ambas versiones (C y Go), **el analisis de rendimien
 
 Se eligio memoria compartida System V (`shmget`, `shmat`, `shmctl`) junto con `fork()` por estas razones:
 
-1. La carga es de alto volumen de datos (matrices completas), no de mensajes pequenos.
+1. La carga es de alto volumen de datos (matrices completas), no de mensajes pequeños.
 2. Cada hijo escribe su bloque de filas directamente en memoria compartida, sin serializar ni copiar por `pipe` o cola de mensajes.
 3. El problema se divide por filas disjuntas, evitando colisiones de escritura.
 4. La sincronizacion se resuelve de forma simple con `waitpid`.
@@ -41,7 +40,7 @@ Se eligio memoria compartida System V (`shmget`, `shmat`, `shmctl`) junto con `f
 - Ventaja: bajo costo de transferencia de datos para este problema.
 - Costo: manejo manual de memoria compartida y ciclo de vida de procesos.
 
-## 2) Metodologia del analisis (C)
+## 2) Metodología del análisis (C)
 
 1. Se compilo el programa en C.
 2. Se ejecutaron pruebas con matrices cuadradas grandes: `N = 600, 900, 1200`.
@@ -93,7 +92,7 @@ Fuente: `benchmark/benchmark_summary.csv`
 | 1200 | 10 | 2.6157 | 1.4477 | 1.81 | 0.18 |
 | 1200 | 12 | 2.6390 | 1.4130 | 1.87 | 0.16 |
 
-## 4) Graficas
+## 4) Gráficas
 
 ### Tiempo paralelo promedio vs k
 
@@ -103,16 +102,16 @@ Fuente: `benchmark/benchmark_summary.csv`
 
 ![Speedup vs k](benchmark/plots/speedup_vs_k.svg)
 
-## 5) Interpretacion
+## 5) Interpretación
 
 1. Para `k=1`, la version paralela suele ser mas lenta o similar por overhead de `fork + IPC + wait`.
 2. Con matrices grandes aparece ganancia clara por paralelismo real.
 3. El mejor speedup medido fue aproximadamente `3.30x` en `N=600, k=6`.
-4. Al aumentar demasiado `k`, la eficiencia cae por costos de coordinacion, cache y planificacion del SO.
+4. Al aumentar demasiado `k`, la eficiencia cae por costos de coordinación, cache y planificacion del SO.
 
 ## 6) Reproducibilidad
 
-Para regenerar el analisis con matrices grandes:
+Para regenerar el análisis con matrices grandes:
 
 ```bash
 cd benchmark
@@ -120,4 +119,4 @@ python3 benchmark.py --sizes 600 900 1200 --k-values 1 2 3 4 5 6 8 10 12 --repea
 python3 plot_svg.py
 ```
 
-Esto recrea el CSV de resultados y las graficas en `benchmark/plots/`.
+Esto recrea el CSV de resultados y las gráficas en `benchmark/plots/`.
