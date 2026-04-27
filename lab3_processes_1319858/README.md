@@ -10,7 +10,7 @@
 
 ```bash
 cd c
-gcc -std=c11 -O2 -Wall -Wextra -pedantic -o parallel_matrix_multiply parallel_matrix_multiply.c parallel.c sequential.c
+gcc -o parallel_matrix_multiply *.c
 ./parallel_matrix_multiply matrix_a.txt matrix_b.txt result.txt 5
 ```
 
@@ -18,7 +18,7 @@ gcc -std=c11 -O2 -Wall -Wextra -pedantic -o parallel_matrix_multiply parallel_ma
 
 ```bash
 cd go
-go build -o parallel_matrix_multiply parallel_matrix_multiply.go parallel.go sequential.go
+go build -o parallel_matrix_multiply .
 ./parallel_matrix_multiply matrix_a.txt matrix_b.txt result.txt 5
 ```
 

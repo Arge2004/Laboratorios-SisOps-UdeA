@@ -26,9 +26,9 @@ def parse_times(output: str) -> tuple[float, float]:
     return float(seq_match.group(1)), float(par_match.group(2))
 
 
-def run_case(binary: Path, a: Path, b: Path, out: Path, k: int) -> tuple[float, float]:
+def run_case(binary: Path, a: Path, b: Path, out: Path, k: int, mode: str = "full") -> tuple[float, float]:
     proc = subprocess.run(
-        [str(binary), str(a), str(b), str(out), str(k)],
+        [str(binary), str(a), str(b), str(out), str(k), mode],
         capture_output=True,
         text=True,
         check=True,
@@ -41,6 +41,7 @@ def main() -> int:
     parser.add_argument("--sizes", nargs="+", type=int, default=[120, 180, 240])
     parser.add_argument("--k-values", nargs="+", type=int, default=[1, 2, 3, 4, 5, 6, 8])
     parser.add_argument("--repeats", type=int, default=5)
+    parser.add_argument("--seq-repeats", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -53,11 +54,6 @@ def main() -> int:
     subprocess.run(
         [
             "gcc",
-            "-std=c11",
-            "-O2",
-            "-Wall",
-            "-Wextra",
-            "-pedantic",
             "-o",
             str(binary),
             str(c_dir / "parallel_matrix_multiply.c"),
@@ -83,12 +79,23 @@ def main() -> int:
         write_matrix(b_path, n, rng)
 
         valid_k = [k for k in args.k_values if k > 0 and n % k == 0]
+        if not valid_k:
+            print(f"N={n:4d} omitido: no hay k validos")
+            continue
+
+        seq_vals = []
+        for _ in range(args.seq_repeats):
+            seq_t, _ = run_case(binary, a_path, b_path, out_path, valid_k[0], mode="seq")
+            seq_vals.append(seq_t)
+
+        seq_avg = statistics.mean(seq_vals)
+        seq_std = statistics.stdev(seq_vals) if len(seq_vals) > 1 else 0.0
+
         for k in valid_k:
-            seq_vals = []
             par_vals = []
             for run_idx in range(1, args.repeats + 1):
-                seq_t, par_t = run_case(binary, a_path, b_path, out_path, k)
-                speedup = (seq_t / par_t) if par_t > 0 else 0.0
+                _, par_t = run_case(binary, a_path, b_path, out_path, k, mode="par")
+                speedup = (seq_avg / par_t) if par_t > 0 else 0.0
                 efficiency = speedup / k
 
                 raw_rows.append(
@@ -96,18 +103,15 @@ def main() -> int:
                         "size": n,
                         "k": k,
                         "run": run_idx,
-                        "seq_time_s": f"{seq_t:.6f}",
+                        "seq_time_s": f"{seq_avg:.6f}",
                         "par_time_s": f"{par_t:.6f}",
                         "speedup": f"{speedup:.6f}",
                         "efficiency": f"{efficiency:.6f}",
                     }
                 )
-                seq_vals.append(seq_t)
                 par_vals.append(par_t)
 
-            seq_avg = statistics.mean(seq_vals)
             par_avg = statistics.mean(par_vals)
-            seq_std = statistics.stdev(seq_vals) if len(seq_vals) > 1 else 0.0
             par_std = statistics.stdev(par_vals) if len(par_vals) > 1 else 0.0
             speedup = (seq_avg / par_avg) if par_avg > 0 else 0.0
             efficiency = speedup / k
