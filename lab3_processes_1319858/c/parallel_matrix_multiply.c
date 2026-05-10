@@ -4,10 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <time.h>
+#include <unistd.h>
 
-void multiply_matrix_sequential(int **a, int **b, int **c, int rows_a, int cols_a, int cols_b);
-int multiply_matrix_parallel(int **a, int **b, int **c, int rows_a, int cols_a, int cols_b, int k);
+static void multiply_matrix_sequential(int **a, int **b, int **c, int rows_a, int cols_a, int cols_b);
+static int multiply_matrix_parallel(int **a, int **b, int **c, int rows_a, int cols_a, int cols_b, int k);
 
 static int **alloc_matrix(int rows, int cols) {
     int **m = (int **)malloc((size_t)rows * sizeof(int *));
@@ -152,17 +157,6 @@ static int write_matrix_to_file(const char *path, int **matrix, int rows, int co
     return 0;
 }
 
-static int equal_matrices(int **a, int **b, int rows, int cols) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            if (a[i][j] != b[i][j]) {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-
 static double elapsed_seconds(const struct timespec *start, const struct timespec *end) {
     long sec = end->tv_sec - start->tv_sec;
     long nsec = end->tv_nsec - start->tv_nsec;
@@ -170,27 +164,14 @@ static double elapsed_seconds(const struct timespec *start, const struct timespe
 }
 
 int main(int argc, char **argv) {
-    if (argc != 5 && argc != 6) {
-        fprintf(stderr, "Uso: %s <matrizA.txt> <matrizB.txt> <salida.txt> <k> [full|seq|par]\n", argv[0]);
+    if (argc != 5) {
+        fprintf(stderr, "Uso: %s <matrizA.txt> <matrizB.txt> <salida.txt> <k>\n", argv[0]);
         return 1;
     }
-
-    const char *mode = "full";
-    if (argc == 6) {
-        mode = argv[5];
-    }
-    if (strcmp(mode, "full") != 0 && strcmp(mode, "seq") != 0 && strcmp(mode, "par") != 0) {
-        fprintf(stderr, "Error: modo invalido. Use full, seq o par\n");
-        return 1;
-    }
-
-    int do_seq = (strcmp(mode, "full") == 0 || strcmp(mode, "seq") == 0);
-    int do_par = (strcmp(mode, "full") == 0 || strcmp(mode, "par") == 0);
 
     int **a = NULL;
     int **b = NULL;
-    int **seq = NULL;
-    int **par = NULL;
+    int **result = NULL;
     int rows_a = 0;
     int cols_a = 0;
     int rows_b = 0;
@@ -218,82 +199,165 @@ int main(int argc, char **argv) {
         free_matrix(b, rows_b);
         return 1;
     }
-    if (do_par && rows_a % k != 0) {
+    if (k > 1 && rows_a % k != 0) {
         fprintf(stderr, "Error: el numero de filas de A debe ser divisible por k\n");
         free_matrix(a, rows_a);
         free_matrix(b, rows_b);
         return 1;
     }
 
-    if (do_seq) {
-        seq = alloc_matrix(rows_a, cols_b);
-    }
-    if (do_par) {
-        par = alloc_matrix(rows_a, cols_b);
-    }
-
-    if ((do_seq && seq == NULL) || (do_par && par == NULL)) {
+    result = alloc_matrix(rows_a, cols_b);
+    if (result == NULL) {
         perror("alloc_matrix");
         free_matrix(a, rows_a);
         free_matrix(b, rows_b);
-        free_matrix(seq, rows_a);
-        free_matrix(par, rows_a);
         return 1;
     }
 
-    struct timespec start_seq;
-    struct timespec end_seq;
-    struct timespec start_par;
-    struct timespec end_par;
+    struct timespec start;
+    struct timespec end;
 
-    if (do_seq) {
-        clock_gettime(CLOCK_MONOTONIC, &start_seq);
-        multiply_matrix_sequential(a, b, seq, rows_a, cols_a, cols_b);
-        clock_gettime(CLOCK_MONOTONIC, &end_seq);
-    }
-
-    if (do_par) {
-        clock_gettime(CLOCK_MONOTONIC, &start_par);
-        if (multiply_matrix_parallel(a, b, par, rows_a, cols_a, cols_b, k) != 0) {
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (k == 1) {
+        multiply_matrix_sequential(a, b, result, rows_a, cols_a, cols_b);
+    } else {
+        if (multiply_matrix_parallel(a, b, result, rows_a, cols_a, cols_b, k) != 0) {
             free_matrix(a, rows_a);
             free_matrix(b, rows_b);
-            free_matrix(seq, rows_a);
-            free_matrix(par, rows_a);
+            free_matrix(result, rows_a);
             return 1;
         }
-        clock_gettime(CLOCK_MONOTONIC, &end_par);
     }
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
-    if (strcmp(mode, "full") == 0 && !equal_matrices(seq, par, rows_a, cols_b)) {
-        fprintf(stderr, "Error: resultado paralelo no coincide con el secuencial\n");
-        free_matrix(a, rows_a);
-        free_matrix(b, rows_b);
-        free_matrix(seq, rows_a);
-        free_matrix(par, rows_a);
-        return 1;
-    }
-
-    int **result = do_par ? par : seq;
     if (write_matrix_to_file(argv[3], result, rows_a, cols_b) != 0) {
         free_matrix(a, rows_a);
         free_matrix(b, rows_b);
-        free_matrix(seq, rows_a);
-        free_matrix(par, rows_a);
+        free_matrix(result, rows_a);
         return 1;
     }
 
-    double seq_seconds = do_seq ? elapsed_seconds(&start_seq, &end_seq) : 0.0;
-    double par_seconds = do_par ? elapsed_seconds(&start_par, &end_par) : 0.0;
-    double speedup = (do_seq && do_par && par_seconds > 0.0) ? seq_seconds / par_seconds : 0.0;
-
-    printf("Sequential time: %.3f seconds\n", seq_seconds);
-    printf("Parallel time (%d processes): %.3f seconds\n", k, par_seconds);
-    printf("Speedup: %.2fx\n", speedup);
+    const char *mode = (k == 1) ? "sequential" : "parallel";
+    printf("Mode: %s\n", mode);
+    printf("Time (%d processes): %.3f seconds\n", k, elapsed_seconds(&start, &end));
     printf("Result saved in: %s\n", argv[3]);
 
     free_matrix(a, rows_a);
     free_matrix(b, rows_b);
-    free_matrix(seq, rows_a);
-    free_matrix(par, rows_a);
+    free_matrix(result, rows_a);
     return 0;
+}
+
+static void multiply_matrix_sequential(int **a, int **b, int **c, int rows_a, int cols_a, int cols_b) {
+    for (int i = 0; i < rows_a; i++) {
+        for (int j = 0; j < cols_b; j++) {
+            int sum = 0;
+            for (int k = 0; k < cols_a; k++) {
+                sum += a[i][k] * b[k][j];
+            }
+            c[i][j] = sum;
+        }
+    }
+}
+
+static int multiply_matrix_parallel(int **a, int **b, int **c, int rows_a, int cols_a, int cols_b, int k) {
+    if (rows_a == 0 || cols_a == 0 || cols_b == 0 || k <= 0) {
+        return 0;
+    }
+
+    int rows = rows_a;
+    int cols = cols_b;
+    int inner = cols_a;
+
+    if (k > rows) {
+        k = rows;
+    }
+    if (rows % k != 0) {
+        fprintf(stderr, "Error: rows must be divisible by k\n");
+        return -1;
+    }
+
+    size_t total = (size_t)rows * (size_t)cols;
+    size_t bytes_to_share = total * sizeof(int);
+
+    int shm_id = shmget(IPC_PRIVATE, bytes_to_share, IPC_CREAT | 0600);
+    if (shm_id < 0) {
+        perror("shmget");
+        return -1;
+    }
+
+    int *shared = (int *)shmat(shm_id, NULL, 0);
+    if (shared == (void *)-1) {
+        perror("shmat");
+        shmctl(shm_id, IPC_RMID, NULL);
+        return -1;
+    }
+
+    memset(shared, 0, bytes_to_share);
+
+    int base = rows / k;
+    pid_t *pids = (pid_t *)malloc(sizeof(pid_t) * (size_t)k);
+    if (pids == NULL) {
+        perror("malloc");
+        shmdt(shared);
+        shmctl(shm_id, IPC_RMID, NULL);
+        return -1;
+    }
+
+    int start = 0;
+    for (int p = 0; p < k; p++) {
+        int end = start + base;
+
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("fork");
+            free(pids);
+            shmdt(shared);
+            shmctl(shm_id, IPC_RMID, NULL);
+            return -1;
+        }
+
+        if (pid == 0) {
+            for (int i = start; i < end; i++) {
+                for (int j = 0; j < cols; j++) {
+                    int sum = 0;
+                    for (int col = 0; col < inner; col++) {
+                        sum += a[i][col] * b[col][j];
+                    }
+                    shared[i * cols + j] = sum;
+                }
+            }
+            _exit(0);
+        }
+
+        pids[p] = pid;
+        start = end;
+    }
+
+    int failed = 0;
+    for (int i = 0; i < k; i++) {
+        int status = 0;
+        if (waitpid(pids[i], &status, 0) < 0) {
+            perror("waitpid");
+            failed = 1;
+            continue;
+        }
+        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+            failed = 1;
+        }
+    }
+
+    if (!failed) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                c[i][j] = shared[i * cols + j];
+            }
+        }
+    }
+
+    free(pids);
+    shmdt(shared);
+    shmctl(shm_id, IPC_RMID, NULL);
+
+    return failed ? -1 : 0;
 }

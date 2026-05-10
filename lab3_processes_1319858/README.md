@@ -5,25 +5,30 @@
 - Argenis Medina Morales - argenis.medina@udea.edu.co
 - Juan Diego Duque Jimenez - juan.duque31@udea.edu.co
 
-## Cómo ejecutar la versión en C
+## Cómo ejecutar la version en C
 
 ```bash
 cd c
-gcc -o parallel_matrix_multiply *.c
+gcc -o parallel_matrix_multiply parallel_matrix_multiply.c
 ./parallel_matrix_multiply matrix_a.txt matrix_b.txt result.txt 5
 ```
 
-## Cómo ejecutar la versión en Go
+## Cómo ejecutar la version en Go
 
 ```bash
 cd go
-go build -o parallel_matrix_multiply .
+go build -o parallel_matrix_multiply parallel_matrix_multiply.go
 ./parallel_matrix_multiply matrix_a.txt matrix_b.txt result.txt 5
 ```
 
 ## Nota importante del reporte
 
-Aunque el laboratorio tiene ambas versiones (C y Go), **el analisis de rendimiento que aparece abajo fue realizado con la version en C**.
+En ambos lenguajes el mismo binario ejecuta la version secuencial o la paralela segun el valor de `k`:
+
+- `k=1` ejecuta la version secuencial.
+- `k>1` ejecuta la version paralela (k subprocesos).
+
+**El analisis de rendimiento que aparece abajo fue realizado con la version en C**.
 
 ## 1) Eleccion de IPC 
 

@@ -7,7 +7,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
+	"unsafe"
+
+	"github.com/gen2brain/shm"
 )
 
 func main() {
@@ -46,7 +50,7 @@ func main() {
 		fmt.Println("Error: dimensiones incompatibles (columnas de A != filas de B)")
 		os.Exit(1)
 	}
-	if len(a)%k != 0 {
+	if k > 1 && len(a)%k != 0 {
 		fmt.Println("Error: el numero de filas de A debe ser divisible por k")
 		os.Exit(1)
 	}
@@ -54,37 +58,27 @@ func main() {
 	rows := len(a)
 	cols := len(b[0])
 
-	seqResult := makeMatrix(rows, cols)
-	parResult := makeMatrix(rows, cols)
+	result := makeMatrix(rows, cols)
 
-	startSeq := time.Now()
-	multiplyMatrixSequential(a, b, seqResult)
-	seqDuration := time.Since(startSeq)
-
-	startPar := time.Now()
-	multiplyMatrixParallel(a, b, k, parResult)
-	parDuration := time.Since(startPar)
-
-	if !equalMatrices(seqResult, parResult) {
-		fmt.Println("Error: resultado paralelo no coincide con el secuencial")
-		os.Exit(1)
+	start := time.Now()
+	if k == 1 {
+		multiplyMatrixSequential(a, b, result)
+	} else {
+		multiplyMatrixParallel(a, b, k, result)
 	}
+	duration := time.Since(start)
 
-	if err := writeMatrixToFile(outputPath, parResult); err != nil {
+	if err := writeMatrixToFile(outputPath, result); err != nil {
 		fmt.Printf("Error guardando resultado: %v\n", err)
 		os.Exit(1)
 	}
 
-	seqSeconds := seqDuration.Seconds()
-	parSeconds := parDuration.Seconds()
-	speedup := 0.0
-	if parSeconds > 0 {
-		speedup = seqSeconds / parSeconds
+	mode := "parallel"
+	if k == 1 {
+		mode = "sequential"
 	}
-
-	fmt.Printf("Sequential time: %.3f seconds\n", seqSeconds)
-	fmt.Printf("Parallel time (%d processes): %.3f seconds\n", k, parSeconds)
-	fmt.Printf("Speedup: %.2fx\n", speedup)
+	fmt.Printf("Mode: %s\n", mode)
+	fmt.Printf("Time (%d processes): %.3f seconds\n", k, duration.Seconds())
 	fmt.Printf("Result saved in: %s\n", outputPath)
 }
 
@@ -172,16 +166,93 @@ func makeMatrix(rows, cols int) [][]int {
 	return matrix
 }
 
-func equalMatrices(a, b [][]int) bool {
-	if len(a) != len(b) || len(a[0]) != len(b[0]) {
-		return false
-	}
+func multiplyMatrixSequential(a, b, c [][]int) {
 	for i := 0; i < len(a); i++ {
-		for j := 0; j < len(a[0]); j++ {
-			if a[i][j] != b[i][j] {
-				return false
+		for j := 0; j < len(b[0]); j++ {
+			for k := 0; k < len(b); k++ {
+				c[i][j] += a[i][k] * b[k][j]
 			}
 		}
 	}
-	return true
+}
+
+func multiplyMatrixParallel(a, b [][]int, k int, c [][]int) {
+	rows := len(a)
+	if rows == 0 || len(b) == 0 || len(b[0]) == 0 || k <= 0 {
+		return
+	}
+
+	cols := len(b[0])
+	inner := len(b)
+	if k > rows {
+		k = rows
+	}
+	if rows%k != 0 {
+		panic("rows must be divisible by k")
+	}
+
+	total := rows * cols
+	bytesToShare := total * int(unsafe.Sizeof(int(0)))
+	shmID, err := shm.Get(shm.IPC_PRIVATE, bytesToShare, shm.IPC_CREAT|0o600)
+	if err != nil {
+		panic(err)
+	}
+	defer shm.Ctl(shmID, shm.IPC_RMID, nil)
+
+	mem, err := shm.At(shmID, 0, 0)
+	if err != nil {
+		panic(err)
+	}
+	defer shm.Dt(mem)
+
+	if len(mem) < bytesToShare {
+		panic("shared memory segment is smaller than expected")
+	}
+
+	shared := unsafe.Slice((*int)(unsafe.Pointer(&mem[0])), total)
+
+	base := rows / k
+
+	start := 0
+	pids := make([]int, 0, k)
+	for p := 0; p < k; p++ {
+		chunk := base
+		end := start + chunk
+
+		pid, _, errno := syscall.RawSyscall(syscall.SYS_FORK, 0, 0, 0)
+		if errno != 0 {
+			panic(errno)
+		}
+
+		if pid == 0 {
+			for i := start; i < end; i++ {
+				for j := 0; j < cols; j++ {
+					sum := 0
+					for col := 0; col < inner; col++ {
+						sum += a[i][col] * b[col][j]
+					}
+					shared[i*cols+j] = sum
+				}
+			}
+			syscall.RawSyscall(syscall.SYS_EXIT, 0, 0, 0)
+		}
+
+		pids = append(pids, int(pid))
+
+		start = end
+	}
+
+	for _, pid := range pids {
+		var status syscall.WaitStatus
+		_, err := syscall.Wait4(pid, &status, 0, nil)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			c[i][j] = shared[i*cols+j]
+		}
+	}
 }
