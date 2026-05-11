@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import csv
 from collections import defaultdict
 from pathlib import Path
@@ -111,9 +112,16 @@ def write_svg(path: Path, title: str, x_label: str, y_label: str, series: list, 
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Generar graficas SVG para el benchmark")
+    parser.add_argument("--summary", type=Path, default=None)
+    parser.add_argument("--out-dir", type=Path, default=None)
+    parser.add_argument("--prefix", type=str, default="")
+    parser.add_argument("--title-suffix", type=str, default="")
+    args = parser.parse_args()
+
     root = Path(__file__).resolve().parent
-    summary = root / "benchmark_summary.csv"
-    plots_dir = root / "plots"
+    summary = args.summary or (root / "benchmark_summary.csv")
+    plots_dir = args.out_dir or (root / "plots")
     plots_dir.mkdir(exist_ok=True)
 
     rows = read_summary(summary)
@@ -134,17 +142,19 @@ def main() -> int:
 
     max_k = max(r["k"] for r in rows)
 
+    title_suffix = f" {args.title_suffix}" if args.title_suffix else ""
+
     write_svg(
-        plots_dir / "time_vs_k.svg",
-        title="Tiempo Paralelo Promedio vs k",
+        plots_dir / f"{args.prefix}time_vs_k.svg",
+        title=f"Tiempo Paralelo Promedio vs k{title_suffix}",
         x_label="Numero de procesos (k)",
         y_label="Tiempo paralelo promedio (s)",
         series=series_time,
     )
 
     write_svg(
-        plots_dir / "speedup_vs_k.svg",
-        title="Speedup vs k",
+        plots_dir / f"{args.prefix}speedup_vs_k.svg",
+        title=f"Speedup vs k{title_suffix}",
         x_label="Numero de procesos (k)",
         y_label="Speedup",
         series=series_speedup,

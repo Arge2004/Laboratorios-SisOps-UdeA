@@ -8,7 +8,6 @@
 ## Cómo ejecutar la version en C
 
 ```bash
-cd c
 gcc -o parallel_matrix_multiply parallel_matrix_multiply.c
 ./parallel_matrix_multiply matrix_a.txt matrix_b.txt result.txt 5
 ```
@@ -16,7 +15,8 @@ gcc -o parallel_matrix_multiply parallel_matrix_multiply.c
 ## Cómo ejecutar la version en Go
 
 ```bash
-cd go
+go mod init parallel_matrix_multiply
+go get github.com/gen2brain/shm
 go build -o parallel_matrix_multiply parallel_matrix_multiply.go
 ./parallel_matrix_multiply matrix_a.txt matrix_b.txt result.txt 5
 ```
@@ -27,8 +27,6 @@ En ambos lenguajes el mismo binario ejecuta la version secuencial o la paralela 
 
 - `k=1` ejecuta la version secuencial.
 - `k>1` ejecuta la version paralela (k subprocesos).
-
-**El analisis de rendimiento que aparece abajo fue realizado con la version en C**.
 
 ## 1) Eleccion de IPC 
 
@@ -44,66 +42,84 @@ Se eligio memoria compartida System V (`shmget`, `shmat`, `shmctl`) junto con `f
 - Ventaja: bajo costo de transferencia de datos para este problema.
 - Costo: manejo manual de memoria compartida y ciclo de vida de procesos.
 
-## 2) Metodología del análisis (C)
+## 2) Metodologia del analisis (C y Go)
 
-1. Se compilo el programa en C.
-2. Se ejecutaron pruebas con matrices cuadradas grandes: `N = 1000, 1500, 1800`.
-3. Se evaluaron valores de `k` en `3 5 6 8` (solo los divisibles por cada `N`).
-4. Cada configuracion se repitio `2` veces.
-5. Se midieron:
-   - `T_seq`: tiempo secuencial promedio
-   - `T_par`: tiempo paralelo promedio
-   - `Speedup = T_seq / T_par`
-   - `Efficiency = Speedup / k`
+Despues de varios experimentos con diferentes tamanos de matrices y valores de `k`, se obtuvieron los siguientes resultados y graficas. Se midieron los tiempos promedio secuenciales y paralelos, junto con el speedup y la eficiencia.
 
-Archivos generados por el benchmark (carpeta dedicada `benchmark/`):
 
-- `benchmark/benchmark_raw.csv`
-- `benchmark/benchmark_summary.csv`
-- `benchmark/plots/time_vs_k.svg`
-- `benchmark/plots/speedup_vs_k.svg`
 
-## 3) Resultados (matrices grandes)
-
-Fuente: `benchmark/benchmark_summary.csv`
+## 3) Resultados C
 
 | N | k | T_seq prom (s) | T_par prom (s) | Speedup | Efficiency |
 |---:|---:|---:|---:|---:|---:|
-| 1000 | 5 | 3.6720 | 0.8915 | 4.12 | 0.82 |
-| 1000 | 8 | 3.6720 | 0.8990 | 4.08 | 0.51 |
-| 1500 | 3 | 11.0220 | 4.5160 | 2.44 | 0.81 |
-| 1500 | 5 | 11.0220 | 4.0360 | 2.73 | 0.55 |
-| 1500 | 6 | 11.0220 | 4.0750 | 2.70 | 0.45 |
-| 1800 | 3 | 32.5800 | 12.6110 | 2.58 | 0.86 |
-| 1800 | 5 | 32.5800 | 10.1185 | 3.22 | 0.64 |
-| 1800 | 6 | 32.5800 | 9.7425 | 3.34 | 0.56 |
-| 1800 | 8 | 32.5800 | 9.5885 | 3.40 | 0.42 |
+| 120 | 1 | 0.0120 | 0.0120 | 1.00 | 1.00 |
+| 120 | 2 | 0.0120 | 0.0092 | 1.30 | 0.65 |
+| 120 | 3 | 0.0120 | 0.0068 | 1.76 | 0.59 |
+| 120 | 4 | 0.0120 | 0.0068 | 1.76 | 0.44 |
+| 120 | 5 | 0.0120 | 0.0056 | 2.14 | 0.43 |
+| 120 | 6 | 0.0120 | 0.0062 | 1.94 | 0.32 |
+| 120 | 8 | 0.0120 | 0.0058 | 2.07 | 0.26 |
+| 180 | 1 | 0.0340 | 0.0340 | 1.00 | 1.00 |
+| 180 | 2 | 0.0340 | 0.0184 | 1.85 | 0.92 |
+| 180 | 3 | 0.0340 | 0.0172 | 1.98 | 0.66 |
+| 180 | 4 | 0.0340 | 0.0138 | 2.46 | 0.62 |
+| 180 | 5 | 0.0340 | 0.0138 | 2.46 | 0.49 |
+| 180 | 6 | 0.0340 | 0.0126 | 2.70 | 0.45 |
+| 240 | 1 | 0.0760 | 0.0760 | 1.00 | 1.00 |
+| 240 | 2 | 0.0760 | 0.0422 | 1.80 | 0.90 |
+| 240 | 3 | 0.0760 | 0.0324 | 2.35 | 0.78 |
+| 240 | 4 | 0.0760 | 0.0298 | 2.55 | 0.64 |
+| 240 | 5 | 0.0760 | 0.0272 | 2.79 | 0.56 |
+| 240 | 6 | 0.0760 | 0.0276 | 2.75 | 0.46 |
+| 240 | 8 | 0.0760 | 0.0304 | 2.50 | 0.31 |
 
-## 4) Gráficas
+## 4) Resultados Go
 
-### Tiempo paralelo promedio vs k
+| N | k | T_seq prom (s) | T_par prom (s) | Speedup | Efficiency |
+|---:|---:|---:|---:|---:|---:|
+| 120 | 1 | 0.0100 | 0.0100 | 1.00 | 1.00 |
+| 120 | 2 | 0.0100 | 0.0066 | 1.52 | 0.76 |
+| 120 | 3 | 0.0100 | 0.0064 | 1.56 | 0.52 |
+| 120 | 4 | 0.0100 | 0.0064 | 1.56 | 0.39 |
+| 120 | 5 | 0.0100 | 0.0060 | 1.67 | 0.33 |
+| 120 | 6 | 0.0100 | 0.0112 | 0.89 | 0.15 |
+| 120 | 8 | 0.0100 | 0.0110 | 0.91 | 0.11 |
+| 180 | 1 | 0.0310 | 0.0310 | 1.00 | 1.00 |
+| 180 | 2 | 0.0310 | 0.0174 | 1.78 | 0.89 |
+| 180 | 3 | 0.0310 | 0.0156 | 1.99 | 0.66 |
+| 180 | 4 | 0.0310 | 0.0128 | 2.42 | 0.61 |
+| 180 | 5 | 0.0310 | 0.0128 | 2.42 | 0.48 |
+| 180 | 6 | 0.0310 | 0.0154 | 2.01 | 0.34 |
+| 240 | 1 | 0.1170 | 0.1170 | 1.00 | 1.00 |
+| 240 | 2 | 0.1170 | 0.0528 | 2.22 | 1.11 |
+| 240 | 3 | 0.1170 | 0.0370 | 3.16 | 1.05 |
+| 240 | 4 | 0.1170 | 0.0334 | 3.50 | 0.88 |
+| 240 | 5 | 0.1170 | 0.0316 | 3.70 | 0.74 |
+| 240 | 6 | 0.1170 | 0.0302 | 3.87 | 0.65 |
+| 240 | 8 | 0.1170 | 0.0288 | 4.06 | 0.51 |
 
-![Tiempo paralelo promedio](benchmark/plots/time_vs_k.svg)
+## 5) Graficas
 
-### Speedup vs k (incluye referencia ideal S(k)=k)
+### C: Tiempo paralelo promedio vs k
 
-![Speedup vs k](benchmark/plots/speedup_vs_k.svg)
+![Tiempo paralelo promedio C](benchmark/plots/c_time_vs_k.svg)
 
-## 5) Interpretación
+### C: Speedup vs k 
 
-1. El uso de `fork + IPC + wait` introduce overhead, pero para estos tamanos de matriz se observan speedups mayores a `2x`.
-2. Con matrices grandes aparece ganancia clara por paralelismo real.
-3. El mejor speedup medido fue aproximadamente `4.12x` en `N=1000, k=5`.
-4. Al aumentar demasiado `k`, la eficiencia cae por costos de coordinación, cache y planificacion del SO.
+![Speedup C](benchmark/plots/c_speedup_vs_k.svg)
 
-## 6) Reproducibilidad
+### Go: Tiempo paralelo promedio vs k
 
-Para regenerar el análisis con matrices grandes:
+![Tiempo paralelo promedio Go](benchmark/plots/go_time_vs_k.svg)
 
-```bash
-cd benchmark
-python3 benchmark.py --sizes 1000 1500 1800 --k-values 3 5 6 8 --repeats 2
-python3 plot_svg.py
-```
+### Go: Speedup vs k 
 
-Esto recrea el CSV de resultados y las gráficas en `benchmark/plots/`.
+![Speedup Go](benchmark/plots/go_speedup_vs_k.svg)
+
+## 6) Interpretacion
+
+1. En ambos lenguajes se observa ganancia con varios valores de `k`, especialmente para `N=240`.
+2. En C, el mejor speedup observado fue alrededor de `2.79x` para `N=240, k=5`.
+3. En Go, el mejor speedup observado fue alrededor de `4.06x` para `N=240, k=8`.
+4. En valores altos de `k`, la eficiencia cae por overhead de procesos, cache y planificacion del SO.
+

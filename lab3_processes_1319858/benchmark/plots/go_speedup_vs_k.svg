@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520">
+<rect width="100%" height="100%" fill="#f8f9fb"/>
+<text x="450.0" y="32" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#1f2937">Speedup vs k (Go)</text>
+<line x1="90" y1="440" x2="870" y2="440" stroke="#111827" stroke-width="2"/>
+<line x1="90" y1="440" x2="90" y2="60" stroke="#111827" stroke-width="2"/>
+<line x1="90.0" y1="440" x2="90.0" y2="446" stroke="#111827"/>
+<text x="90.0" y="464" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111827">1</text>
+<line x1="201.42857142857142" y1="440" x2="201.42857142857142" y2="446" stroke="#111827"/>
+<text x="201.42857142857142" y="464" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111827">2</text>
+<line x1="312.85714285714283" y1="440" x2="312.85714285714283" y2="446" stroke="#111827"/>
+<text x="312.85714285714283" y="464" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111827">3</text>
+<line x1="424.2857142857143" y1="440" x2="424.2857142857143" y2="446" stroke="#111827"/>
+<text x="424.2857142857143" y="464" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111827">4</text>
+<line x1="535.7142857142857" y1="440" x2="535.7142857142857" y2="446" stroke="#111827"/>
+<text x="535.7142857142857" y="464" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111827">5</text>
+<line x1="647.1428571428571" y1="440" x2="647.1428571428571" y2="446" stroke="#111827"/>
+<text x="647.1428571428571" y="464" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111827">6</text>
+<line x1="870.0" y1="440" x2="870.0" y2="446" stroke="#111827"/>
+<text x="870.0" y="464" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#111827">8</text>
+<line x1="84" y1="440.0" x2="90" y2="440.0" stroke="#111827"/>
+<line x1="90" y1="440.0" x2="870" y2="440.0" stroke="#e5e7eb"/>
+<text x="80" y="444.0" text-anchor="end" font-family="sans-serif" font-size="12" fill="#111827">0.00</text>
+<line x1="84" y1="376.6666666666667" x2="90" y2="376.6666666666667" stroke="#111827"/>
+<line x1="90" y1="376.6666666666667" x2="870" y2="376.6666666666667" stroke="#e5e7eb"/>
+<text x="80" y="380.6666666666667" text-anchor="end" font-family="sans-serif" font-size="12" fill="#111827">1.47</text>
+<line x1="84" y1="313.33333333333337" x2="90" y2="313.33333333333337" stroke="#111827"/>
+<line x1="90" y1="313.33333333333337" x2="870" y2="313.33333333333337" stroke="#e5e7eb"/>
+<text x="80" y="317.33333333333337" text-anchor="end" font-family="sans-serif" font-size="12" fill="#111827">2.93</text>
+<line x1="84" y1="250.0" x2="90" y2="250.0" stroke="#111827"/>
+<line x1="90" y1="250.0" x2="870" y2="250.0" stroke="#e5e7eb"/>
+<text x="80" y="254.0" text-anchor="end" font-family="sans-serif" font-size="12" fill="#111827">4.40</text>
+<line x1="84" y1="186.66666666666669" x2="90" y2="186.66666666666669" stroke="#111827"/>
+<line x1="90" y1="186.66666666666669" x2="870" y2="186.66666666666669" stroke="#e5e7eb"/>
+<text x="80" y="190.66666666666669" text-anchor="end" font-family="sans-serif" font-size="12" fill="#111827">5.87</text>
+<line x1="84" y1="123.33333333333331" x2="90" y2="123.33333333333331" stroke="#111827"/>
+<line x1="90" y1="123.33333333333331" x2="870" y2="123.33333333333331" stroke="#e5e7eb"/>
+<text x="80" y="127.33333333333331" text-anchor="end" font-family="sans-serif" font-size="12" fill="#111827">7.33</text>
+<line x1="84" y1="60.0" x2="90" y2="60.0" stroke="#111827"/>
+<line x1="90" y1="60.0" x2="870" y2="60.0" stroke="#e5e7eb"/>
+<text x="80" y="64.0" text-anchor="end" font-family="sans-serif" font-size="12" fill="#111827">8.80</text>
+<text x="450.0" y="498" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#111827">Numero de procesos (k)</text>
+<text x="22" y="260.0" text-anchor="middle" transform="rotate(-90 22 260.0)" font-family="sans-serif" font-size="14" fill="#111827">Speedup</text>
+<line x1="90.0" y1="396.8181818181818" x2="870.0" y2="94.54545454545456" stroke="#4b5563" stroke-width="2" stroke-dasharray="8,6"/>
+<polyline fill="none" stroke="#0f4c5c" stroke-width="3" points="90.0,396.8181818181818 201.42857142857142,374.5729818181818 312.85714285714283,372.5284090909091 424.2857142857143,372.5284090909091 535.7142857142857,368.03028863636365 647.1428571428571,401.44481136363635 870.0,400.74379772727275"/>
+<circle cx="90.0" cy="396.8181818181818" r="3.5" fill="#0f4c5c"/>
+<circle cx="201.42857142857142" cy="374.5729818181818" r="3.5" fill="#0f4c5c"/>
+<circle cx="312.85714285714283" cy="372.5284090909091" r="3.5" fill="#0f4c5c"/>
+<circle cx="424.2857142857143" cy="372.5284090909091" r="3.5" fill="#0f4c5c"/>
+<circle cx="535.7142857142857" cy="368.03028863636365" r="3.5" fill="#0f4c5c"/>
+<circle cx="647.1428571428571" cy="401.44481136363635" r="3.5" fill="#0f4c5c"/>
+<circle cx="870.0" cy="400.74379772727275" r="3.5" fill="#0f4c5c"/>
+<line x1="650" y1="70" x2="672" y2="70" stroke="#0f4c5c" stroke-width="3"/>
+<text x="678" y="74" font-family="sans-serif" font-size="12" fill="#111827">N=120</text>
+<polyline fill="none" stroke="#e36414" stroke-width="3" points="90.0,396.8181818181818 201.42857142857142,363.06688409090907 312.85714285714283,354.1899977272727 424.2857142857143,335.4190340909091 535.7142857142857,335.4190340909091 647.1428571428571,353.0755613636364"/>
+<circle cx="90.0" cy="396.8181818181818" r="3.5" fill="#e36414"/>
+<circle cx="201.42857142857142" cy="363.06688409090907" r="3.5" fill="#e36414"/>
+<circle cx="312.85714285714283" cy="354.1899977272727" r="3.5" fill="#e36414"/>
+<circle cx="424.2857142857143" cy="335.4190340909091" r="3.5" fill="#e36414"/>
+<circle cx="535.7142857142857" cy="335.4190340909091" r="3.5" fill="#e36414"/>
+<circle cx="647.1428571428571" cy="353.0755613636364" r="3.5" fill="#e36414"/>
+<line x1="650" y1="92" x2="672" y2="92" stroke="#e36414" stroke-width="3"/>
+<text x="678" y="96" font-family="sans-serif" font-size="12" fill="#111827">N=180</text>
+<polyline fill="none" stroke="#6a994e" stroke-width="3" points="90.0,396.8181818181818 201.42857142857142,344.3130204545455 312.85714285714283,303.45209545454543 424.2857142857143,288.73435 535.7142857142857,280.1179363636364 647.1428571428571,272.7062090909091 870.0,264.5738636363636"/>
+<circle cx="90.0" cy="396.8181818181818" r="3.5" fill="#6a994e"/>
+<circle cx="201.42857142857142" cy="344.3130204545455" r="3.5" fill="#6a994e"/>
+<circle cx="312.85714285714283" cy="303.45209545454543" r="3.5" fill="#6a994e"/>
+<circle cx="424.2857142857143" cy="288.73435" r="3.5" fill="#6a994e"/>
+<circle cx="535.7142857142857" cy="280.1179363636364" r="3.5" fill="#6a994e"/>
+<circle cx="647.1428571428571" cy="272.7062090909091" r="3.5" fill="#6a994e"/>
+<circle cx="870.0" cy="264.5738636363636" r="3.5" fill="#6a994e"/>
+<line x1="650" y1="114" x2="672" y2="114" stroke="#6a994e" stroke-width="3"/>
+<text x="678" y="118" font-family="sans-serif" font-size="12" fill="#111827">N=240</text>
+</svg>
